@@ -18,11 +18,14 @@ if(NOT DEFINED JUCE_DIR)
     message(FATAL_ERROR "Set JUCE_DIR to your JUCE root directory before configuring (same JUCE checkout Creation Station and Creation Engine use).")
 endif()
 
-include(cmake/CreationSharedLLVM.cmake)
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/CMake/CreationSharedLLVM.cmake")
 configure_creation_shared_llvm(CL "Creation Live")
 
 add_subdirectory("${JUCE_DIR}" juce)
 add_subdirectory(Language)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/AssetSystem" CreationSuiteSharedAssetSystem)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/Services" CreationSuiteSharedServices)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/UI" CreationSuiteSharedUI)
 
 juce_add_gui_app(CreationLiveApp
     PRODUCT_NAME "Creation Live"
@@ -49,6 +52,8 @@ target_compile_definitions(CreationLiveApp PRIVATE
 
 target_link_libraries(CreationLiveApp PRIVATE
     creation_live_language_host
+    creation_suite_ui
+    creation_suite_ui_assets
     juce::juce_gui_extra
     juce::juce_audio_basics
     juce::juce_audio_devices

@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
+#include <creation/ui/CreationSuiteLogos.h>
 
 class CreationLiveApplication final : public juce::JUCEApplication
 {
@@ -34,6 +35,7 @@ private:
                                    juce::DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar(true);
+            setIcon(creation::ui::getSuiteLogoImage(creation::ui::SuiteLogoId::live));
             setContentOwned(new MainComponent(), true);
             centreWithSize(getWidth(), getHeight());
             setResizable(true, true);

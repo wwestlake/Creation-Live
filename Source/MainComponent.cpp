@@ -1,9 +1,54 @@
 #include "MainComponent.h"
 #include "Branding.h"
 #include "../Language/AppLanguagePolicy.h"
+#include <creation/ui/CreationSuiteLogos.h>
 
 MainComponent::MainComponent()
 {
+    headerBar.setAppTitle("Creation Live");
+    headerBar.setLogoImage(creation::ui::getSuiteLogoImage(creation::ui::SuiteLogoId::live));
+    headerBar.setProjectLabel("Project: Untitled Live Show");
+    headerBar.audioButton.setButtonText("Live");
+    headerBar.tourButton.setButtonText("Tools");
+    headerBar.setTransportButtonVisible(CreationSuiteHeaderBar::TransportButtonSlot::rewind, false);
+    headerBar.setTransportButtonVisible(CreationSuiteHeaderBar::TransportButtonSlot::fastForward, false);
+    headerBar.setTransportButtonEnabled(CreationSuiteHeaderBar::TransportButtonSlot::click, false);
+    headerBar.onPlay = [this]
+    {
+        playing = true;
+        recording = false;
+        syncTransportState();
+        headerBar.setStatusText("Transport: go live preview");
+    };
+    headerBar.onPause = [this]
+    {
+        playing = false;
+        recording = false;
+        syncTransportState();
+        headerBar.setStatusText("Transport: pause");
+    };
+    headerBar.onStop = [this]
+    {
+        playing = false;
+        recording = false;
+        syncTransportState();
+        headerBar.setStatusText("Transport: stop");
+    };
+    headerBar.onRecord = [this]
+    {
+        recording = ! recording;
+        playing = recording;
+        syncTransportState();
+        headerBar.setStatusText(recording ? "Transport: recording broadcast" : "Transport: record off");
+    };
+    headerBar.onLoopChanged = [this](bool enabled)
+    {
+        headerBar.setStatusText(enabled ? "Loop mode enabled" : "Loop mode disabled");
+    };
+    headerBar.setStatusText("Idle");
+    addAndMakeVisible(headerBar);
+    syncTransportState();
+
     titleLabel.setText("Creation Live", juce::dontSendNotification);
     titleLabel.setFont(juce::Font(32.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
@@ -53,6 +98,8 @@ void MainComponent::paint(juce::Graphics& g)
 void MainComponent::resized()
 {
     auto area = getLocalBounds().reduced(36, 28);
+    headerBar.setBounds(getLocalBounds().removeFromTop(96));
+    area.removeFromTop(86);
     titleLabel.setBounds(area.removeFromTop(40));
     subtitleLabel.setBounds(area.removeFromTop(28));
     runtimeLabel.setBounds(area.removeFromTop(26));
@@ -67,4 +114,10 @@ void MainComponent::resized()
     timelineGroup.setBounds(area.removeFromTop(240));
     area.removeFromTop(14);
     notesBox.setBounds(area);
+}
+
+void MainComponent::syncTransportState()
+{
+    headerBar.setPlaybackVisualState(playing, recording);
+    headerBar.setScrubModeEnabled(false);
 }
