@@ -64,3 +64,23 @@ target_link_libraries(CreationLiveApp PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+install(TARGETS CreationLiveApp
+    RUNTIME DESTINATION .
+    RESOURCE DESTINATION .
+)
+install(FILES README.md LICENSE DESTINATION .)
+
+set(CPACK_PACKAGE_NAME "Creation Live")
+set(CPACK_PACKAGE_VENDOR "LagDaemon Software")
+set(CPACK_PACKAGE_CONTACT "LagDaemon Software")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Creation Live")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "creation-live-${CPACK_PACKAGE_VERSION}-win64")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Creation Live")
+set(CPACK_GENERATOR "ZIP;WIX")
+set(CPACK_WIX_PROGRAM_MENU_FOLDER "Creation Live")
+set(CPACK_PACKAGE_EXECUTABLES "Creation Live" "Creation Live")
+set(CPACK_CREATE_DESKTOP_LINKS "Creation Live")
+
+include(CPack)
+
