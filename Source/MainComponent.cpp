@@ -5,6 +5,9 @@
 
 MainComponent::MainComponent()
 {
+    juce::String suiteError;
+    suiteSettings = suiteSettingsStore.load(suiteError);
+
     headerBar.setAppTitle("Creation Live");
     headerBar.setLogoImage(creation::ui::getSuiteLogoImage(creation::ui::SuiteLogoId::live));
     headerBar.setProjectLabel("Project: Untitled Live Show");
@@ -46,6 +49,23 @@ MainComponent::MainComponent()
         headerBar.setStatusText(enabled ? "Loop mode enabled" : "Loop mode disabled");
     };
     headerBar.setStatusText("Idle");
+
+    suiteShellController.attach(headerBar,
+                                {
+                                    "Creation Live",
+                                    creation::assets::SuiteAppDomain::live,
+                                    creation_live::branding::backgroundColour()
+                                },
+                                [this](const juce::String& status)
+                                {
+                                    headerBar.setStatusText(status);
+                                });
+
+    suiteShellController.onProjectOpenRequested = [this](const juce::String& projectId)
+    {
+        openProject(projectId);
+    };
+
     addAndMakeVisible(headerBar);
     syncTransportState();
 
@@ -114,6 +134,19 @@ void MainComponent::resized()
     timelineGroup.setBounds(area.removeFromTop(240));
     area.removeFromTop(14);
     notesBox.setBounds(area);
+}
+
+void MainComponent::openProject(const juce::String& projectId)
+{
+    juce::String errorMessage;
+    if (! creation::assets::ProjectWorkspaceService::openProject(suiteSettings, projectId, projectSession, errorMessage))
+    {
+        headerBar.setStatusText("Could not open project: " + errorMessage);
+        return;
+    }
+
+    headerBar.setProjectLabel("Project: " + projectSession.getManifest().projectName);
+    headerBar.setStatusText("Opened project: " + projectSession.getManifest().projectName);
 }
 
 void MainComponent::syncTransportState()

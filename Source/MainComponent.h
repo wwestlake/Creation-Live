@@ -1,7 +1,11 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <creation/assets/ProjectSession.h>
+#include <creation/assets/ProjectWorkspaceService.h>
+#include <creation/suite/SuiteSettings.h>
 #include <creation/ui/CreationSuiteHeaderBar.h>
+#include <creation/ui/SuiteShellController.h>
 
 class MainComponent final : public juce::Component
 {
@@ -13,8 +17,13 @@ public:
 
 private:
     void syncTransportState();
+    void openProject(const juce::String& projectId);
 
     CreationSuiteHeaderBar headerBar;
+    creation::ui::SuiteShellController suiteShellController;
+    creation::suite::SuiteSettingsStore suiteSettingsStore;
+    creation::suite::SuiteSettings suiteSettings;
+    creation::assets::ProjectSession projectSession;
     juce::Label titleLabel;
     juce::Label subtitleLabel;
     juce::Label runtimeLabel;
