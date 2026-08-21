@@ -3,6 +3,39 @@
 #include "../Language/AppLanguagePolicy.h"
 #include <creation/ui/CreationSuiteLogos.h>
 
+namespace
+{
+// Wraps an existing component (not owned) as a dock panel's content, filling
+// whatever bounds the dock zone/tab gives it.
+class NonOwningPanelHost final : public juce::Component
+{
+public:
+    explicit NonOwningPanelHost(juce::Component& contentToHost) : content(contentToHost)
+    {
+        addAndMakeVisible(content);
+    }
+
+    void resized() override
+    {
+        content.setBounds(getLocalBounds());
+    }
+
+private:
+    juce::Component& content;
+};
+
+const juce::String panelIdTimeline = "timeline";
+const juce::String panelIdPreview = "preview";
+const juce::String panelIdLibrary = "library";
+const juce::String panelIdNotes = "notes";
+
+constexpr int menuIdPanelTimeline = 3001;
+constexpr int menuIdPanelPreview = 3002;
+constexpr int menuIdPanelLibrary = 3003;
+constexpr int menuIdPanelNotes = 3004;
+constexpr int menuIdResetLayout = 3005;
+}
+
 MainComponent::MainComponent()
 {
     juce::String suiteError;
@@ -86,9 +119,8 @@ MainComponent::MainComponent()
     timelineGroup.setText("Run Of Show / Cue Stack");
     previewGroup.setText("Program / Multiview");
     libraryGroup.setText("Scenes / Media / Overlays");
-    addAndMakeVisible(timelineGroup);
-    addAndMakeVisible(previewGroup);
-    addAndMakeVisible(libraryGroup);
+    // Reparented into dock panels below (see initialiseDockingWorkspace), not
+    // added directly here.
 
     notesBox.setMultiLine(true);
     notesBox.setReadOnly(true);
@@ -98,7 +130,25 @@ MainComponent::MainComponent()
                      "- cues / automation\n"
                      "- media + overlay playback\n"
                      "- stream health + transitions\n");
-    addAndMakeVisible(notesBox);
+
+    menuBar = std::make_unique<juce::MenuBarComponent>(static_cast<juce::MenuBarModel*>(this));
+    // Nothing in this app sets a suite-wide dark LookAndFeel, so MenuBarComponent
+    // falls back to LookAndFeel_V4::drawMenuBarItem/drawMenuBarBackground, which key
+    // off TextButton colour ids (not PopupMenu's) -- the default scheme renders dark
+    // text on a dark bar, invisible against this app's dark theme without this.
+    menuBar->setColour(juce::TextButton::buttonColourId, juce::Colour(0xff1c2230));
+    menuBar->setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff2a3244));
+    menuBar->setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+    menuBar->setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+    addAndMakeVisible(*menuBar);
+
+    dockManager = std::make_unique<CreationDock::DockManager>(*this);
+    addAndMakeVisible(*dockManager);
+    initialiseDockingWorkspace();
+    // setSize() below fires resized() immediately; menuBar/dockManager must already
+    // exist and be registered before that happens, or they're silently left at zero
+    // bounds (addAndMakeVisible alone doesn't trigger a layout pass).
+    resized();
 
     setSize(1280, 820);
 }
@@ -117,23 +167,90 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(36, 28);
     headerBar.setBounds(getLocalBounds().removeFromTop(96));
-    area.removeFromTop(86);
-    titleLabel.setBounds(area.removeFromTop(40));
-    subtitleLabel.setBounds(area.removeFromTop(28));
-    runtimeLabel.setBounds(area.removeFromTop(26));
-    area.removeFromTop(18);
 
-    auto topRow = area.removeFromTop(320);
-    previewGroup.setBounds(topRow.removeFromLeft(area.getWidth() * 2 / 3).reduced(0, 0));
-    topRow.removeFromLeft(14);
-    libraryGroup.setBounds(topRow);
+    auto area = getLocalBounds();
+    area.removeFromTop(96);
 
-    area.removeFromTop(14);
-    timelineGroup.setBounds(area.removeFromTop(240));
-    area.removeFromTop(14);
-    notesBox.setBounds(area);
+    auto titleArea = area.removeFromTop(60).reduced(36, 4);
+    titleLabel.setBounds(titleArea.removeFromTop(28));
+    subtitleLabel.setBounds(titleArea.removeFromTop(18));
+    runtimeLabel.setBounds(titleArea);
+
+    if (menuBar != nullptr)
+        menuBar->setBounds(area.removeFromTop(28));
+
+    if (dockManager != nullptr)
+        dockManager->setBounds(area);
+}
+
+juce::StringArray MainComponent::getMenuBarNames()
+{
+    return { "Panels" };
+}
+
+juce::PopupMenu MainComponent::getMenuForIndex(int, const juce::String&)
+{
+    juce::PopupMenu menu;
+
+    const auto isOpen = [this](const juce::String& id)
+    {
+        return dockManager != nullptr && dockManager->isPanelOpen(id);
+    };
+
+    menu.addItem(menuIdPanelTimeline, "Run Of Show / Cue Stack", true, isOpen(panelIdTimeline));
+    menu.addItem(menuIdPanelPreview, "Program / Multiview", true, isOpen(panelIdPreview));
+    menu.addItem(menuIdPanelLibrary, "Scenes / Media / Overlays", true, isOpen(panelIdLibrary));
+    menu.addItem(menuIdPanelNotes, "Notes", true, isOpen(panelIdNotes));
+    menu.addSeparator();
+    menu.addItem(menuIdResetLayout, "Reset Dock Layout");
+    return menu;
+}
+
+void MainComponent::menuItemSelected(int menuItemID, int)
+{
+    switch (menuItemID)
+    {
+        case menuIdPanelTimeline: toggleDockPanel(panelIdTimeline, CreationDock::DockTargetZone::Bottom); break;
+        case menuIdPanelPreview:  toggleDockPanel(panelIdPreview, CreationDock::DockTargetZone::CenterTab); break;
+        case menuIdPanelLibrary:  toggleDockPanel(panelIdLibrary, CreationDock::DockTargetZone::Right); break;
+        case menuIdPanelNotes:    toggleDockPanel(panelIdNotes, CreationDock::DockTargetZone::Right); break;
+        case menuIdResetLayout:   if (dockManager != nullptr) dockManager->resetLayout(); break;
+        default: break;
+    }
+
+    menuItemsChanged();
+}
+
+void MainComponent::initialiseDockingWorkspace()
+{
+    if (dockManager == nullptr)
+        return;
+
+    // These three GroupComponents are empty scaffold frames today -- docking
+    // gives them a real resizable/closable window, but there's no real content
+    // inside them yet; that's future work, not part of this pass.
+    dockManager->registerPanel(panelIdPreview, "Program / Multiview",
+        std::make_unique<NonOwningPanelHost>(previewGroup), CreationDock::DockTargetZone::CenterTab);
+    dockManager->registerPanel(panelIdLibrary, "Scenes / Media / Overlays",
+        std::make_unique<NonOwningPanelHost>(libraryGroup), CreationDock::DockTargetZone::Right);
+    dockManager->registerPanel(panelIdTimeline, "Run Of Show / Cue Stack",
+        std::make_unique<NonOwningPanelHost>(timelineGroup), CreationDock::DockTargetZone::Bottom);
+    dockManager->registerPanel(panelIdNotes, "Notes",
+        std::make_unique<NonOwningPanelHost>(notesBox), CreationDock::DockTargetZone::Right);
+}
+
+void MainComponent::toggleDockPanel(const juce::String& panelId, CreationDock::DockTargetZone fallbackZone)
+{
+    if (dockManager == nullptr)
+        return;
+
+    if (dockManager->isPanelOpen(panelId))
+        dockManager->closePanel(panelId);
+    else
+        dockManager->showPanel(panelId, fallbackZone);
+
+    menuItemsChanged();
 }
 
 void MainComponent::openProject(const juce::String& projectId)

@@ -34,13 +34,31 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/UI" CreationSuiteShar
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/NodeSystem" CreationSuiteSharedNodeSystem)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/CEL" CreationSuiteSharedCel)
 
+if(NOT TARGET CreationDock)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/JuceDocking" CreationSuiteSharedDocking)
+endif()
+
 juce_add_gui_app(CreationLiveApp
     PRODUCT_NAME "Creation Live"
     COMPANY_NAME "LagDaemon Software"
     BUNDLE_ID "com.lagdaemon.creationlive"
 )
 
+# Mirrors the built executable into the workspace-level shared bin directory
+# (D:\CreationSuite-Workspaces\claude-<config>-bin) so it's reachable at a
+# stable path without needing OS symlink privileges -- every other suite app
+# already does this (see AGENTS.md); Live was missing it entirely.
+add_custom_command(TARGET CreationLiveApp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "D:/CreationSuite-Workspaces/claude-$<LOWER_CASE:$<CONFIG>>-bin"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:CreationLiveApp>" "D:/CreationSuite-Workspaces/claude-$<LOWER_CASE:$<CONFIG>>-bin/"
+    COMMENT "Copying CreationLiveApp to the shared claude bin directory"
+)
+
 juce_generate_juce_header(CreationLiveApp)
+
+target_include_directories(CreationLiveApp PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../shared/JuceDocking/include"
+)
 
 target_sources(CreationLiveApp PRIVATE
     Source/Main.cpp
@@ -63,6 +81,7 @@ target_link_libraries(CreationLiveApp PRIVATE
     creation_suite_ui_assets
     ce_lang_frontend
     node_system
+    CreationDock
     juce::juce_gui_extra
     juce::juce_audio_basics
     juce::juce_audio_devices
