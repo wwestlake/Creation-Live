@@ -42,6 +42,8 @@ juce_add_gui_app(CreationLiveApp
     PRODUCT_NAME "Creation Live"
     COMPANY_NAME "LagDaemon Software"
     BUNDLE_ID "com.lagdaemon.creationlive"
+    ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/../../shared/UI/assets/creation_live.png"
+    ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/../../shared/UI/assets/creation_live.png"
 )
 
 # Mirrors the built executable into the workspace-level shared bin directory
