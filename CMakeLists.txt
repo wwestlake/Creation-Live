@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-set(CREATION_LIVE_VERSION "0.0.1" CACHE STRING "Creation Live product version")
+set(CREATION_LIVE_VERSION "0.0.1" CACHE STRING "Djehuti Live product version")
 project(CreationLive VERSION ${CREATION_LIVE_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -19,7 +19,7 @@ if(NOT DEFINED JUCE_DIR)
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/CMake/CreationSharedLLVM.cmake")
-configure_creation_shared_llvm(CL "Creation Live")
+configure_creation_shared_llvm(CL "Djehuti Live")
 
 add_subdirectory("${JUCE_DIR}" juce)
 add_subdirectory(Language)
@@ -35,7 +35,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/NodeSystem" CreationS
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/CEL" CreationSuiteSharedCel)
 
 juce_add_gui_app(CreationLiveApp
-    PRODUCT_NAME "Creation Live"
+    PRODUCT_NAME "Djehuti Live"
     COMPANY_NAME "LagDaemon Software"
     BUNDLE_ID "com.lagdaemon.creationlive"
 )
@@ -78,17 +78,17 @@ install(TARGETS CreationLiveApp
 )
 install(FILES README.md LICENSE DESTINATION .)
 
-set(CPACK_PACKAGE_NAME "Creation Live")
+set(CPACK_PACKAGE_NAME "Djehuti Live")
 set(CPACK_PACKAGE_VENDOR "LagDaemon Software")
 set(CPACK_PACKAGE_CONTACT "LagDaemon Software")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Creation Live")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Djehuti Live")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "creation-live-${CPACK_PACKAGE_VERSION}-win64")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Creation Live")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Djehuti Live")
 set(CPACK_GENERATOR "ZIP;WIX")
-set(CPACK_WIX_PROGRAM_MENU_FOLDER "Creation Live")
-set(CPACK_PACKAGE_EXECUTABLES "Creation Live" "Creation Live")
-set(CPACK_CREATE_DESKTOP_LINKS "Creation Live")
+set(CPACK_WIX_PROGRAM_MENU_FOLDER "Djehuti Live")
+set(CPACK_PACKAGE_EXECUTABLES "Djehuti Live" "Djehuti Live")
+set(CPACK_CREATE_DESKTOP_LINKS "Djehuti Live")
 
 include(CPack)
 

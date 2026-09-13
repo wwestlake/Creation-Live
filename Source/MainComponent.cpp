@@ -8,7 +8,7 @@ MainComponent::MainComponent()
     juce::String suiteError;
     suiteSettings = suiteSettingsStore.load(suiteError);
 
-    headerBar.setAppTitle("Creation Live");
+    headerBar.setAppTitle("Djehuti Live");
     headerBar.setLogoImage(creation::ui::getSuiteLogoImage(creation::ui::SuiteLogoId::live));
     headerBar.setProjectLabel("Project: Untitled Live Show");
     headerBar.audioButton.setButtonText("Live");
@@ -52,7 +52,7 @@ MainComponent::MainComponent()
 
     suiteShellController.attach(headerBar,
                                 {
-                                    "Creation Live",
+                                    "Djehuti Live",
                                     creation::assets::SuiteAppDomain::live,
                                     creation_live::branding::backgroundColour()
                                 },
@@ -69,7 +69,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(headerBar);
     syncTransportState();
 
-    titleLabel.setText("Creation Live", juce::dontSendNotification);
+    titleLabel.setText("Djehuti Live", juce::dontSendNotification);
     titleLabel.setFont(juce::Font(32.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(titleLabel);

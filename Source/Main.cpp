@@ -5,7 +5,7 @@
 class CreationLiveApplication final : public juce::JUCEApplication
 {
 public:
-    const juce::String getApplicationName() override { return "Creation Live"; }
+    const juce::String getApplicationName() override { return "Djehuti Live"; }
     const juce::String getApplicationVersion() override { return "0.0.1"; }
     bool moreThanOneInstanceAllowed() override { return true; }
 
