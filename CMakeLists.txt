@@ -28,11 +28,12 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/AssetSystem" Creation
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/Services" CreationSuiteSharedServices)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/UI" CreationSuiteSharedUI)
 
-# Live's CEL surface -- suite-wide language, not a bespoke per-app one.
-# ce_lang_frontend/node_system build with no LLVM dependency; only the
-# JIT half of shared/CEL needs LLVM, and Live doesn't link that (yet).
+# Live's node-graph surface -- suite-wide (node_system), not a bespoke
+# per-app one. No FRust language integration is wired up yet (Language/
+# AppLanguagePolicy.* is presently just an LLVM-availability probe and
+# domain-name policy stub); when Live needs real scripting, wire in
+# shared/FrustPluginRuntime the same way Djehuti Station's Signal Lab does.
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/NodeSystem" CreationSuiteSharedNodeSystem)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../shared/CEL" CreationSuiteSharedCel)
 
 juce_add_gui_app(CreationLiveApp
     PRODUCT_NAME "Djehuti Live"
@@ -61,7 +62,6 @@ target_link_libraries(CreationLiveApp PRIVATE
     creation_live_language_host
     creation_suite_ui
     creation_suite_ui_assets
-    ce_lang_frontend
     node_system
     juce::juce_gui_extra
     juce::juce_audio_basics
