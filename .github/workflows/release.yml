@@ -44,11 +44,9 @@ jobs:
         run: |
           git clone --depth 1 --branch 8.0.7 https://github.com/juce-framework/JUCE.git "$env:RUNNER_TEMP\JUCE"
 
-      # WinFlexBison install step removed (2026-09-13): this app dropped its
-      # shared/CEL dependency (removed suite-wide, replaced by FRust) and
-      # never picked up a FRust dependency of its own -- see CMakeLists.txt's
-      # own comment on this. node_system alone needs no grammar generation,
-      # so no flex/bison tooling is needed here at all anymore.
+      # WinFlexBison install step removed: this app has no FRust dependency
+      # -- see CMakeLists.txt's own comment on this. node_system alone needs
+      # no grammar generation, so no flex/bison tooling is needed here.
 
       - name: Classify release
         id: classify
